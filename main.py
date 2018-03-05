@@ -11,6 +11,8 @@ face_detector = dlib.simple_object_detector("./detector_face.svm")
 eye_detector = dlib.simple_object_detector("./detector_eye.svm")
 # 最小サイズ
 MIN_SIZE = 150
+# 倍率(大きくすると出力サイズが小さくなる)
+ZOOM = 3
 
 # 指定されたフォルダー内にあるフォルダーの一覧生成
 def listdir(folder):
@@ -38,20 +40,20 @@ def icon_maker(target):
                 face_width = rect.right() - rect.left()
                 face_height = rect.bottom() - rect.top()
                 # 長方形の場合、弾く
-                if abs(face_width - face_height) > 5:
+                if abs(face_width - face_height) > 3:
                     continue
                 # 幅拡大
-                xs = int(rect.left() - face_width/3)
+                xs = int(rect.left() - face_width/ZOOM)
                 if(xs < 0):
                     xs = 0
-                xe = int(rect.right() + face_width/3)
+                xe = int(rect.right() + face_width/ZOOM)
                 if(xe > width):
                     xe = width
                 # 高さ拡大
-                ys = int(rect.top() - face_height/3)
+                ys = int(rect.top() - face_height/ZOOM)
                 if(ys < 0):
                     xs = 0
-                ye = int(rect.bottom() + face_height/3)
+                ye = int(rect.bottom() + face_height/ZOOM)
                 if(ye > height):
                     xe = height
                 # 現状のアイコンより大きいか
@@ -65,7 +67,7 @@ def icon_maker(target):
                         new_image_path = icon_dir + icon_name + ext
                         cv2.imwrite(new_image_path, dst)
                         current_width = face_width
-    print("maked : " + icon_name)
+    print("done : " + icon_name)
 
 def main():
     Parallel(n_jobs=-1)([delayed(icon_maker)(folder) for folder in listdir(file_dir)])
