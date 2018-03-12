@@ -52,10 +52,13 @@ def icon_maker(target):
                 # 高さ拡大
                 ys = int(rect.top() - face_height/ZOOM)
                 if(ys < 0):
-                    xs = 0
+                    ys = 0
                 ye = int(rect.bottom() + face_height/ZOOM)
                 if(ye > height):
-                    xe = height
+                    ye = height
+                # サイズ更新
+                face_width = xe - xs
+                face_height = ye - ys
                 # 現状のアイコンより大きいか
                 # 横幅がMIN_SIZE以下は弾く
                 if face_width > MIN_SIZE and current_width < face_width:
