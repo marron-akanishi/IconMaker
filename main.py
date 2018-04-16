@@ -9,6 +9,10 @@ icon_dir = "./icon/"
 face_detector = dlib.simple_object_detector("./detector_face.svm")
 # 目認識特徴量ファイル
 eye_detector = dlib.simple_object_detector("./detector_eye.svm")
+# 最小サイズ
+MIN_SIZE = 150
+# 倍率(大きくすると出力サイズが小さくなる)
+ZOOM = 3
 
 # 指定されたフォルダー内にあるフォルダーの一覧生成
 def listdir(folder):
@@ -20,7 +24,7 @@ def listdir(folder):
 
 def icon_maker(target):
     # 現在のアイコンサイズ
-    max_size = 0
+    current_width = 0
     # アイコン名
     icon_name = target.split("/")[-1]
     for temp in os.listdir(target):
@@ -32,23 +36,32 @@ def icon_maker(target):
         # 顔が検出できたか
         if len(faces) > 0:
             for i, rect in enumerate(faces):
-                # エリア拡大
-                size = rect.bottom() - rect.top()
-                ys = int(rect.top() - size/1.5)
-                if(ys < 0):
-                    xs = 0
-                ye = int(rect.bottom() + size/1.5)
-                if(ye > height):
-                    xe = height
-                size = rect.right() - rect.left()
-                xs = int(rect.left() - size/1.5)
+                # サイズ取得
+                face_width = rect.right() - rect.left()
+                face_height = rect.bottom() - rect.top()
+                # 長方形の場合、弾く
+                if abs(face_width - face_height) > 3:
+                    continue
+                # 幅拡大
+                xs = int(rect.left() - face_width/ZOOM)
                 if(xs < 0):
                     xs = 0
-                xe = int(rect.right() + size/1.5)
+                xe = int(rect.right() + face_width/ZOOM)
                 if(xe > width):
                     xe = width
+                # 高さ拡大
+                ys = int(rect.top() - face_height/ZOOM)
+                if(ys < 0):
+                    ys = 0
+                ye = int(rect.bottom() + face_height/ZOOM)
+                if(ye > height):
+                    ye = height
+                # サイズ更新
+                face_width = xe - xs
+                face_height = ye - ys
                 # 現状のアイコンより大きいか
-                if max_size < size:
+                # 横幅がMIN_SIZE以下は弾く
+                if face_width > MIN_SIZE and current_width < face_width:
                     # 顔だけ切り出し
                     dst = image[ys:ye, xs:xe]
                     eyes = eye_detector(dst)
@@ -56,8 +69,8 @@ def icon_maker(target):
                     if len(eyes) > 0:
                         new_image_path = icon_dir + icon_name + ext
                         cv2.imwrite(new_image_path, dst)
-                        max_size = size
-    print("maked : " + icon_name)
+                        current_width = face_width
+    print("done : " + icon_name)
 
 def main():
     Parallel(n_jobs=-1)([delayed(icon_maker)(folder) for folder in listdir(file_dir)])
