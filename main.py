@@ -6,7 +6,7 @@ import dlib
 file_dir = "./raw/"
 icon_dir = "./icon/"
 # 顔認識特徴量ファイル
-face_detector = dlib.simple_object_detector("./detector_fav.svm")
+face_detector = dlib.simple_object_detector("./detector_face.svm")
 # 目認識特徴量ファイル
 eye_detector = dlib.simple_object_detector("./detector_eye.svm")
 
@@ -34,28 +34,23 @@ def icon_maker(target):
             for i, rect in enumerate(faces):
                 # エリア拡大
                 size = rect.bottom() - rect.top()
-                ys = int(rect.top() - size/2)
+                ys = int(rect.top() - size/1.5)
                 if(ys < 0):
                     xs = 0
-                ye = int(rect.bottom() + size/2)
+                ye = int(rect.bottom() + size/1.5)
                 if(ye > height):
                     xe = height
                 size = rect.right() - rect.left()
-                xs = int(rect.left() - size/2)
+                xs = int(rect.left() - size/1.5)
                 if(xs < 0):
                     xs = 0
-                xe = int(rect.right() + size/2)
+                xe = int(rect.right() + size/1.5)
                 if(xe > width):
                     xe = width
                 # 現状のアイコンより大きいか
                 if max_size < size:
                     # 顔だけ切り出し
                     dst = image[ys:ye, xs:xe]
-                    # もう1度顔検出
-                    face_check = face_detector(dst)
-                    # 2人以上の場合はスキップ
-                    if len(face_check) != 1:
-                        continue
                     eyes = eye_detector(dst)
                     # 目が検出できたか
                     if len(eyes) > 0:
